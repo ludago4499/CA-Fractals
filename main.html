@@ -3,42 +3,36 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title> Fractals — COordinates </title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width:720px; margin:40px auto; padding:0 16px; }
-        form { display:flex; gap:8px; align-items:end; flex-direction:column; padding:12px; border:1px solid #ddd; border-radius:6px; width:360px; }
-        label { display:flex; flex-direction:column; font-size:14px; }
-        input[type="number"] { padding:6px 8px; width:140px; }
-        .row { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
-        button { padding:8px 12px; }
-        ul { margin-top:8px; padding-left:20px; max-height:300px; overflow:auto; }
-        h1,h2 { margin:0 0 8px 0; font-size:18px; }
-    </style>
+    <title> Fractals</title>
+    <link href="css/styles.css" rel="stylesheet" />
 </head>
 <body>
-    <h1> Fractals — Coordinates</h1>
+    <h1>Coordinates</h1>
+    <div id = "content">  
+        <form id="formCoords" aria-label="Lista de coordenadas">
+            <h2>Add coordinates Tamaulipas</h2>
+            <div class="row">
+                <label>
+                    X
+                    <input id="x" name="x" type="number" step="1" required placeholder="ej. -0.75">
+                </label>
+                <label>
+                    Y
+                    <input id="y" name="y" type="number" step="1" required placeholder="ej. 0.12">
+                </label>
+            </div>
 
-    <form id="formCoords" aria-label="Lista de coordenadas">
-        <h2>Add coordinates Tamaulipas</h2>
-        <div class="row">
-            <label>
-                X
-                <input id="x" name="x" type="number" step="1" required placeholder="ej. -0.75">
-            </label>
-            <label>
-                Y
-                <input id="y" name="y" type="number" step="1" required placeholder="ej. 0.12">
-            </label>
-        </div>
+            <div class="row">
+                <button type="submit">Add</button>
+                <button type="button" id="clear">Clear</button>
+                <button type="button" id="start">Start</button>
+            </div>
 
-        <div class="row">
-            <button type="submit">Add</button>
-            <button type="button" id="clear">Clear</button>
-            <button type="button" id="start">Start</button>
-        </div>
-
-        <ul id="coordsList" aria-live="polite"></ul>
-    </form>
+            <ul id="coordsList" aria-live="polite"></ul>
+        </form>
+        <canvas id="fractalCanvas" width="800" height="800"></canvas>
+    </div>
+    
 
     <script>
         const coords = [];
