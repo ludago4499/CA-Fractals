@@ -60,7 +60,7 @@ end
     @async begin
         try
             println("Iniciando excitable_media.start en background...")
-            start(GRID_N, matrix, length(matrix))
+            start(GRID_N, matrix, length(matrix)) # launches code
             println("Excitable media finalizado.")
         catch err
             @warn "Error en excitable_media" err
@@ -70,4 +70,4 @@ end
     return Dict("status" => "exito", "mensaje" => "Procesamiento iniciado (background)", "received" => length(matrix))
 end
 
-serve(port=8080, middleware=[cors_middleware])
+serve(port=8000, middleware=[cors_middleware])

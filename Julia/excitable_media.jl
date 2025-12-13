@@ -73,6 +73,8 @@ function display(excited,refracted, n,turn)
         clims = (0, 2), # Ensure color map spans 0 to 2 exactly
         colorbar = false # Hide colorbar if you don't need the scale
     )
+    xlim((0,100))
+    ylim((0,100))
     #display plot
     Base.display(p)
 end
