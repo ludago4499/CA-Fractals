@@ -10,7 +10,17 @@
     <h1>Greenberg Hastings Model</h1>
     <div id = "content">  
         <form id="formCoords" aria-label="Lista de coordenadas">
-            <h2>Coordinates for Excitable Cells</h2>
+            <h2>Coordinates for Cells</h2>
+            <div class="row">
+                <label>
+                    Tipo
+                    <select id="cellType" aria-label="Tipo de celda">
+                        <option value="excitable">Excitable</option>
+                        <option value="refracted">Refracted</option>
+                    </select>
+                </label>
+            </div>
+            
             <div class="row">
                 <label>
                     X
@@ -22,33 +32,55 @@
                 </label>
             </div>
 
+            
+
             <div class="row">
                 <button type="submit">Add</button>
                 <button type="button" id="clear">Clear</button>
                 <button type="button" id="start">Start</button>
             </div>
 
-            <ul id="coordsList" aria-live="polite"></ul>
+            <div class="row" id = "listsContainer">
+                <div>
+                    <h3>Excitable</h3>
+                    <ul id="coordsExcitableList" aria-live="polite"></ul>
+                </div>
+                <div>
+                    <h3>Refracted</h3>
+                    <ul id="coordsRefractedList" aria-live="polite"></ul>
+                </div>
+            </div>
         </form>
-        <canvas id="fractalCanvas" width="1400" height="800"></canvas>
+        <canvas id="fractalCanvas" width="800" height="800"></canvas>
     </div>
     
 
     <script>
-        const coords = [];
+        const coordsExcitable = [];
+        const coordsRefracted = [];
         const form = document.getElementById('formCoords');
         const inputX = document.getElementById('x');
         const inputY = document.getElementById('y');
-        const list = document.getElementById('coordsList');
+        const typeSelect = document.getElementById('cellType');
+        const excitableList = document.getElementById('coordsExcitableList');
+        const refractedList = document.getElementById('coordsRefractedList');
         const clearBtn = document.getElementById('clear');
         const sendBtn = document.getElementById('start');
 
         function render() {
-            list.innerHTML = '';
-            coords.forEach((c, i) => {
+            excitableList.innerHTML = '';
+            refractedList.innerHTML = '';
+
+            coordsExcitable.forEach((c, i) => {
                 const li = document.createElement('li');
-                li.textContent = `${i + 1}. X: ${c.x}, Y: ${c.y}`;
-                list.appendChild(li);
+                li.textContent = `(${c.x}, ${c.y})`;
+                excitableList.appendChild(li);
+            });
+
+            coordsRefracted.forEach((c, i) => {
+                const li = document.createElement('li');
+                li.textContent = `(${c.x}, ${c.y})`;
+                refractedList.appendChild(li);
             });
         }
 
@@ -56,31 +88,43 @@
             e.preventDefault();
             const xv = parseFloat(inputX.value);
             const yv = parseFloat(inputY.value);
-            if (Number.isFinite(xv) && Number.isFinite(yv)) {
-                coords.push({ x: xv, y: yv });
-                inputX.value = '';
-                inputY.value = '';
-                inputX.focus();
-                render();
-                console.log('Coordenadas:', coords);
-            } else {
+            if (!Number.isFinite(xv) || !Number.isFinite(yv)) {
                 alert('Ingrese valores numéricos válidos.');
+                return;
             }
+
+            const type = typeSelect.value;
+            if (type === 'excitable') {
+                coordsExcitable.push({ x: xv, y: yv });
+            } else {
+                coordsRefracted.push({ x: xv, y: yv });
+            }
+
+            inputX.value = '';
+            inputY.value = '';
+            inputX.focus();
+            render();
+            console.log('Excitable:', coordsExcitable, 'Refracted:', coordsRefracted);
         });
 
         clearBtn.addEventListener('click', () => {
-            coords.length = 0;
+            coordsExcitable.length = 0;
+            coordsRefracted.length = 0;
             render();
             inputX.focus();
         });
 
         sendBtn.addEventListener('click', async () => {
-            if (coords.length === 0) { alert('La lista está vacía.'); return; }
+            if (coordsExcitable.length === 0 && coordsRefracted.length === 0) {
+                alert('Ambas listas están vacías.');
+                return;
+            }
             try {
+                const payload = { excitable: coordsExcitable, refracted: coordsRefracted };
                 const res = await fetch('http://localhost:8000/coords', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(coords)
+                    body: JSON.stringify(payload)
                 });
                 if (!res.ok) {
                     const txt = await res.text();

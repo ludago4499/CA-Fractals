@@ -44,7 +44,8 @@ form {
     box-shadow: 0 6px 18px rgba(12,20,40,0.06);
     display: grid;
     gap: 14px;
-    align-items: start;
+    align-content: start;
+    justify-items: center;
     width: 100%;
 }
 
@@ -171,4 +172,13 @@ ul#coordsList li span.muted {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+}
+
+.row#listsContainer {
+    width: 100%;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    align-items: start;
 }

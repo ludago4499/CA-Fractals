@@ -2,7 +2,7 @@ using Plots
 
 # -- Fixes / helper wrapper --
 # Ensure update uses refracted_set (pequeña corrección en la versión original)
-function start(n, matrix, counter)
+function start(n, matrix, counter; initial_refracted=Tuple{Int,Int}[])
     # Use Sets for excited/refracted to ensure uniqueness and fast membership tests
     function update(excited_set, refracted_set)
         newset = Set{Tuple{Int,Int}}()
@@ -28,8 +28,8 @@ function start(n, matrix, counter)
     excited = Set(matrix)
     turn = 0 # 0 is initial position
     nontrivials = counter # puntos no triviales
-    refracted = Set{Tuple{Int,Int}}()
-    while (turn<10)
+    refracted = Set(initial_refracted)
+    while (turn<21)
         # display   
         display(excited, refracted, n, turn)
         sleep(2)
@@ -73,16 +73,15 @@ function display(excited,refracted, n,turn)
         clims = (0, 2), # Ensure color map spans 0 to 2 exactly
         colorbar = false # Hide colorbar if you don't need the scale
     )
-    xlim((0,100))
-    ylim((0,100))
     #display plot
     Base.display(p)
 end
 
 # Wrapper to run start directly from server (recibe lista de tuplas o pares numéricos)
-function run_with_coords(n::Int, coords)
+function run_with_coords(n::Int, coords; refracted_coords=Tuple{Int,Int}[])
     # coords expected as array of pairs/tuples/dicts with x,y
     matrix = Tuple{Int,Int}[]
+    refracted_matrix = Tuple{Int,Int}[]
     for c in coords
         xv = 0.0
         yv = 0.0
@@ -96,13 +95,32 @@ function run_with_coords(n::Int, coords)
             xv = 0.0
             yv = 0.0
         end
-        xi = clamp(Int(round(xv)), 1, n)
-        yi = clamp(Int(round(yv)), 1, n)
+            xi = clamp(Int(round(xv + 50.0)), 1, n)
+            yi = clamp(Int(round(yv + 50.0)), 1, n)
         push!(matrix, (xi, yi))
     end
 
+    # process refracted_coords if provided
+    for c in refracted_coords
+        xv = 0.0
+        yv = 0.0
+        if isa(c, AbstractDict)
+            xv = try Float64(get(c, "x", 0.0)) catch _ 0.0 end
+            yv = try Float64(get(c, "y", 0.0)) catch _ 0.0 end
+        elseif isa(c, AbstractVector) || isa(c, Tuple)
+            xv = try Float64(c[1]) catch _ 0.0 end
+            yv = try Float64(c[2]) catch _ 0.0 end
+        else
+            xv = 0.0
+            yv = 0.0
+        end
+            xi = clamp(Int(round(xv + 50.0)), 1, n)
+            yi = clamp(Int(round(yv + 50.0)), 1, n)
+        push!(refracted_matrix, (xi, yi))
+    end
+
     @async try
-        start(n, matrix, length(matrix))
+        start(n, matrix, length(matrix); initial_refracted=refracted_matrix)
     catch err
         @warn "Error running excitable_media" err
     end

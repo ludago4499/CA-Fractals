@@ -28,46 +28,52 @@ end
 
 @post "/coords" function(req)
     datos = json(req)
-    lista_coords = isa(datos, Array) ? datos : get(datos, "coordenadas", nothing)
-    if lista_coords === nothing
-        return Dict("status"=>"error", "mensaje"=>"JSON inválido: se esperaba 'coordenadas' o un array")
-    end
 
-    println("--- Datos Recibidos ---")
-    println(lista_coords)
+    # Support three formats:
+    # 1) Array of coords -> treated as excitable
+    # 2) Object with key "coordenadas" -> treated as excitable (legacy)
+    # 3) Object with keys "excitable" and/or "refracted"
+    excitable_input = nothing
+    refracted_input = Tuple[]
 
-    # Convertir y clamar en rango 1..GRID_N
-    matrix = Tuple{Int,Int}[]
-    for c in lista_coords
-        xv = 0.0
-        yv = 0.0
-        if isa(c, AbstractDict)
-            xv = try Float64(get(c, "x", 0.0)) catch _ 0.0 end
-            yv = try Float64(get(c, "y", 0.0)) catch _ 0.0 end
-        elseif isa(c, AbstractVector) || isa(c, Tuple)
-            xv = try Float64(c[1]) catch _ 0.0 end
-            yv = try Float64(c[2]) catch _ 0.0 end
+    if isa(datos, Array)
+        excitable_input = datos
+    elseif isa(datos, AbstractDict)
+        if haskey(datos, "excitable") || haskey(datos, "refracted")
+            excitable_input = get(datos, "excitable", Tuple[])
+            refracted_input = get(datos, "refracted", Tuple[])
         else
-            xv = 0.0
-            yv = 0.0
+            excitable_input = get(datos, "coordenadas", nothing)
         end
-        xi = clamp(Int(round(xv)), 1, GRID_N)
-        yi = clamp(Int(round(yv)), 1, GRID_N)
-        push!(matrix, (xi, yi))
     end
+
+    if excitable_input === nothing && isempty(refracted_input)
+        return Dict("status"=>"error", "mensaje"=>"JSON inválido: se esperaba 'coordenadas' o {excitable,refracted}")
+    end
+
+    println("--- Datos Recibidos (excitable/refracted) ---")
+    println("excitable: ", excitable_input)
+    println("refracted: ", refracted_input)
 
     # Lanzar el procesamiento en background (no bloquea la respuesta HTTP)
     @async begin
         try
-            println("Iniciando excitable_media.start en background...")
-            start(GRID_N, matrix, length(matrix)) # launches code
-            println("Excitable media finalizado.")
+            println("Iniciando excitable_media con excitable + refracted en background...")
+            # Use the helper run_with_coords which now accepts refracted_coords
+            exc_len = 0
+            try
+                exc_len = isempty(excitable_input) ? 0 : length(excitable_input)
+            catch _
+                exc_len = 0
+            end
+            run_with_coords(GRID_N, excitable_input; refracted_coords=refracted_input)
+            println("Excitable media (background) lanzado.")
         catch err
             @warn "Error en excitable_media" err
         end
     end
 
-    return Dict("status" => "exito", "mensaje" => "Procesamiento iniciado (background)", "received" => length(matrix))
+    return Dict("status" => "exito", "mensaje" => "Procesamiento iniciado (background)", "received_excitable" => (isa(excitable_input, Array) ? length(excitable_input) : 0), "received_refracted" => (isa(refracted_input, Array) ? length(refracted_input) : 0))
 end
 
 serve(port=8000, middleware=[cors_middleware])
