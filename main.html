@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Fractales — Coordenadas</title>
+    <title> Fractals — COordinates </title>
     <style>
         body { font-family: Arial, sans-serif; max-width:720px; margin:40px auto; padding:0 16px; }
         form { display:flex; gap:8px; align-items:end; flex-direction:column; padding:12px; border:1px solid #ddd; border-radius:6px; width:360px; }
@@ -16,24 +16,25 @@
     </style>
 </head>
 <body>
-    <h1>Fractales — Coordenadas</h1>
+    <h1> Fractals — Coordinates</h1>
 
     <form id="formCoords" aria-label="Lista de coordenadas">
-        <h2>Agregar coordenada Tamaulipas</h2>
+        <h2>Add coordinates Tamaulipas</h2>
         <div class="row">
             <label>
                 X
-                <input id="x" name="x" type="number" step="any" required placeholder="ej. -0.75">
+                <input id="x" name="x" type="number" step="1" required placeholder="ej. -0.75">
             </label>
             <label>
                 Y
-                <input id="y" name="y" type="number" step="any" required placeholder="ej. 0.12">
+                <input id="y" name="y" type="number" step="1" required placeholder="ej. 0.12">
             </label>
         </div>
 
         <div class="row">
-            <button type="submit">Agregar</button>
-            <button type="button" id="clear">Borrar lista</button>
+            <button type="submit">Add</button>
+            <button type="button" id="clear">Clear</button>
+            <button type="button" id="start">Start</button>
         </div>
 
         <ul id="coordsList" aria-live="polite"></ul>
@@ -46,6 +47,7 @@
         const inputY = document.getElementById('y');
         const list = document.getElementById('coordsList');
         const clearBtn = document.getElementById('clear');
+        const sendBtn = document.getElementById('start');
 
         function render() {
             list.innerHTML = '';
@@ -77,6 +79,28 @@
             render();
             inputX.focus();
         });
+
+        sendBtn.addEventListener('click', async () => {
+            if (coords.length === 0) { alert('La lista está vacía.'); return; }
+            try {
+                const res = await fetch('http://localhost:8080/coords', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(coords)
+                });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(txt || res.statusText);
+                }
+                const data = await res.json();
+                alert(`Respuesta Julia: ${JSON.stringify(data)}`);
+                console.log('Respuesta Julia:', data);
+            } catch (err) {
+                console.error(err);
+                alert('Error al enviar a Julia: ' + err.message);
+            }
+        });
+
     </script>
 </body>
 </html>
