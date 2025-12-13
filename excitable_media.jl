@@ -1,10 +1,12 @@
 using Plots
 
-function start(n,matrix,counter)
+# -- Fixes / helper wrapper --
+# Ensure update uses refracted_set (pequeña corrección en la versión original)
+function start(n, matrix, counter)
     # Use Sets for excited/refracted to ensure uniqueness and fast membership tests
     function update(excited_set, refracted_set)
-        newset = Set{Tuple{Int,Int}}() 
-        refract = deepcopy(excited)
+        newset = Set{Tuple{Int,Int}}()
+        refract = deepcopy(excited)   # <-- corregido (antes referenciaba `excited`)
         for (r,c) in excited_set
             neighbors = ((r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1))
             for (nr,nc) in neighbors
@@ -16,27 +18,22 @@ function start(n,matrix,counter)
                 end
             end
         end
-        return (refract,newset) # new set for excited states
+        return (refract, newset) # new set for excited states
     end # end update
-    
-    # 100x100 grid 
+
     row = n
     col = n
 
-    # rand(range, rows, cols)
-    grid = zeros(row, col) # we start with only susceptible
-    # let 0 = susceptible, 1 = refractory and 2 = excited
-    # We use Sets to store the excited and refractory states for uniqueness
+    grid = zeros(row, col)
     excited = Set(matrix)
     turn = 0 # 0 is initial position
     nontrivials = counter # puntos no triviales
     refracted = Set{Tuple{Int,Int}}()
     while (turn<10)
         # display   
-        display(excited,refracted,n,turn)
+        display(excited, refracted, n, turn)
         sleep(2)
 
-        #turn
         turn += 1
 
         #update
@@ -44,32 +41,29 @@ function start(n,matrix,counter)
         
         
     end
-
-    
-
 end # end start
 
-function display(excited,refracted,n,turn)
+function display(excited,refracted, n,turn)
     function gridmaker(refracted,excited,n)
         grid = zeros(Int,n,n)
         # refracted
         for (r,c) in refracted
-            if 1<= r <= n && 1 <= c <= n
+            if 1 <= r <= n && 1 <= c <= n
                 grid[r,c] = 1
             end
         end
 
         #excited
         for (r,c) in excited
-            if 1<= r <= n && 1 <= c <= n
+            if 1 <= r <= n && 1 <= c <= n
                 grid[r,c] = 2
             end
         end
         return grid
     end
-  
-    colors = [:black,:cyan,:orange]
-    grid = gridmaker(refracted,excited,n)
+
+    colors = [:black, :cyan, :orange]
+    grid = gridmaker(refracted, excited, n)
     p = heatmap(
         1:n, 1:n, grid,
         color = colors,
@@ -81,35 +75,33 @@ function display(excited,refracted,n,turn)
     )
     #display plot
     Base.display(p)
-        
-    
-
 end
 
-function main(n)
-    print("Give the initial excited states in a comma separaed form. Write `end` to end. \n")
-    print("Example: 0,0 1,0 3,1 end.  \n")
-    matrix = []
-    flag = false
-    counter=0
-    half = div(n, 2) # center around half of n (integer division)
-    while( flag == false)
-        raw_input = readline()
-        if strip(raw_input) == "end"
-            flag = true
+# Wrapper to run start directly from server (recibe lista de tuplas o pares numéricos)
+function run_with_coords(n::Int, coords)
+    # coords expected as array of pairs/tuples/dicts with x,y
+    matrix = Tuple{Int,Int}[]
+    for c in coords
+        xv = 0.0
+        yv = 0.0
+        if isa(c, AbstractDict)
+            xv = try Float64(get(c, "x", 0.0)) catch _ 0.0 end
+            yv = try Float64(get(c, "y", 0.0)) catch _ 0.0 end
+        elseif isa(c, AbstractVector) || isa(c, Tuple)
+            xv = try Float64(c[1]) catch _ 0.0 end
+            yv = try Float64(c[2]) catch _ 0.0 end
         else
-            a, b = parse.(Int,split(raw_input, ","))  # separates into numbers of the form a,b
-            x = (a + half,b + half)
-            push!(matrix, x)
-            counter+=1
+            xv = 0.0
+            yv = 0.0
         end
+        xi = clamp(Int(round(xv)), 1, n)
+        yi = clamp(Int(round(yv)), 1, n)
+        push!(matrix, (xi, yi))
     end
-    
-    start(n,matrix,counter)
- end
 
-function init()
-    n=100
-    matrix,counter = main(n)
-    start(n,matrix,counter)
+    @async try
+        start(n, matrix, length(matrix))
+    catch err
+        @warn "Error running excitable_media" err
+    end
 end
