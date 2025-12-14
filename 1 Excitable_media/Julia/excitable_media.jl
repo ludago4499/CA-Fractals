@@ -75,6 +75,9 @@ end
 function run_with_coords(n::Int, coords; refracted_coords=Tuple{Int,Int}[])
     # Helper to process coordinates from JSON to Julia Tuples
     function process_input(input_list)
+        if input_list === nothing
+            return Tuple{Int,Int}[]
+        end
         out = Tuple{Int,Int}[]
         for c in input_list
             #extract x and Y
@@ -91,7 +94,9 @@ function run_with_coords(n::Int, coords; refracted_coords=Tuple{Int,Int}[])
         # Clamp and apply offset (n/2)
             xi = clamp(Int(round(xv + div(n,2))), 1, n) 
             yi = clamp(Int(round(yv + div(n,2))), 1, n)
+            push!(out, (xi, yi))
         end
+        return out
     end
     
     # coords expected as array of pairs/tuples/dicts with x,y
