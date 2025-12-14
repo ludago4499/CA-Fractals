@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title> Greenberg Hastings</title>
+    <link href="styles.css" rel="stylesheet" />
+</head>
+<body>
+    <h1>Greenberg Hastings Model</h1>
+    <div id = "content">  
+        <form id="formCoords" aria-label="Lista de coordenadas">
+            <h2>Coordinates for Cells</h2>
+            <div class="row">
+                <label>
+                    Tipo
+                    <select id="cellType" aria-label="Tipo de celda">
+                        <option value="excitable">Excitable</option>
+                        <option value="refracted">Refracted</option>
+                    </select>
+                </label>
+            </div>
+            
+            <div class="row">
+                <label>
+                    X
+                    <input id="x" name="x" type="number" step="1" min="-50" max="50" required placeholder="ej. 50">
+                </label>
+                <label>
+                    Y
+                    <input id="y" name="y" type="number" step="1" min="-50" max="50" required placeholder="ej. 50">
+                </label>
+            </div>
+
+            
+
+            <div class="row">
+                <button type="submit">Add</button>
+                <button type="button" id="clear">Clear</button>
+                <button type="button" id="start">Start</button>
+            </div>
+
+            <div class="row" id = "listsContainer">
+                <div>
+                    <h3>Excitable</h3>
+                    <ul id="coordsExcitableList" aria-live="polite"></ul>
+                </div>
+                <div>
+                    <h3>Refracted</h3>
+                    <ul id="coordsRefractedList" aria-live="polite"></ul>
+                </div>
+            </div>
+        </form>
+        <canvas id="fractalCanvas" width="1200" height="800"></canvas>
+    </div>
+    
+
+    <script>
+        const coordsExcitable = [];
+        const coordsRefracted = [];
+        const form = document.getElementById('formCoords');
+        const inputX = document.getElementById('x');
+        const inputY = document.getElementById('y');
+        const typeSelect = document.getElementById('cellType');
+        const excitableList = document.getElementById('coordsExcitableList');
+        const refractedList = document.getElementById('coordsRefractedList');
+        const clearBtn = document.getElementById('clear');
+        const sendBtn = document.getElementById('start');
+
+        function render() {
+            excitableList.innerHTML = '';
+            refractedList.innerHTML = '';
+
+            coordsExcitable.forEach((c, i) => {
+                const li = document.createElement('li');
+                li.textContent = `(${c.x}, ${c.y})`;
+                excitableList.appendChild(li);
+            });
+
+            coordsRefracted.forEach((c, i) => {
+                const li = document.createElement('li');
+                li.textContent = `(${c.x}, ${c.y})`;
+                refractedList.appendChild(li);
+            });
+        }
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const xv = parseFloat(inputX.value);
+            const yv = parseFloat(inputY.value);
+            if (!Number.isFinite(xv) || !Number.isFinite(yv)) {
+                alert('Ingrese valores numéricos válidos.');
+                return;
+            }
+
+            const type = typeSelect.value;
+            if (type === 'excitable') {
+                coordsExcitable.push({ x: xv, y: yv });
+            } else {
+                coordsRefracted.push({ x: xv, y: yv });
+            }
+
+            inputX.value = '';
+            inputY.value = '';
+            inputX.focus();
+            render();
+            console.log('Excitable:', coordsExcitable, 'Refracted:', coordsRefracted);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            coordsExcitable.length = 0;
+            coordsRefracted.length = 0;
+            render();
+            inputX.focus();
+        });
+
+        sendBtn.addEventListener('click', async () => {
+            if (coordsExcitable.length === 0 && coordsRefracted.length === 0) {
+                alert('Ambas listas están vacías.');
+                return;
+            }
+            try {
+                const payload = { excitable: coordsExcitable, refracted: coordsRefracted };
+                const res = await fetch('http://localhost:8000/coords', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(txt || res.statusText);
+                }
+                const data = await res.json();
+                alert(`Respuesta Julia: ${JSON.stringify(data)}`);
+                console.log('Respuesta Julia:', data);
+            } catch (err) {
+                console.error(err);
+                alert('Error al enviar a Julia: ' + err.message);
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+/* Estilos renovados para que la página se vea ordenada y agradable */
+:root{
+    --bg: #f6f8fa;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --accent: #2563eb; /* azul */
+    --accent-600: #1e40af;
+    --radius: 10px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: var(--bg);
+    color: #0f172a;
+    margin: 0;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Contenedor principal */
+main {
+    width: 100%;
+    max-width: 900px;
+}
+
+/* Título centrado y con separación */
+h1 {
+    text-align: center;
+    margin: 0 0 20px 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #0b1320;
+}
+
+/* Tarjeta del formulario */
+form {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 6px 18px rgba(12,20,40,0.06);
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    justify-items: center;
+    width: 100%;
+}
+
+/* Encabezado del formulario */
+form h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #0b1320;
+}
+
+/* Grid para inputs: responsive 2 columnas en desktop, 1 en móvil */
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width:560px){
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+/* Label e input */
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #0b1320;
+}
+
+input[type="number"] {
+    padding: 10px 12px;
+    border: 1px solid #e6e9ef;
+    border-radius: 8px;
+    background: #fbfdff;
+    outline: none;
+    transition: box-shadow .15s, border-color .15s;
+    font-size: 0.95rem;
+}
+
+input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 6px 18px rgba(37,99,235,0.08);
+}
+
+/* Botonera */
+.actions {
+    display:flex;
+    gap: 10px;
+    flex-wrap:wrap;
+}
+
+button {
+    border: none;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+button[type="submit"],
+button#start {
+    background: linear-gradient(180deg,var(--accent),var(--accent-600));
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(37,99,235,0.18);
+}
+
+button#clear {
+    background: #f3f4f6;
+    color: #111827;
+    box-shadow: none;
+}
+
+button:hover{ transform: translateY(-1px); transition: transform .12s ease; }
+button:active{ transform: translateY(0); }
+
+/* Lista de coordenadas */
+ul#coordsList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+    max-height: 260px;
+    overflow: auto;
+}
+
+ul#coordsList li {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: #fbfdff;
+    border: 1px solid #eef2ff;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #0b1320;
+}
+
+ul#coordsList li span.muted {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+/* Pequeños ajustes para accesibilidad y espaciado */
+.row { /* si usas aún .row en HTML */
+    display:flex;
+    gap: 12px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+}
+
+/* Footer/nota opcional */
+.note {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+}
+
+#content {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.row#listsContainer {
+    width: 100%;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    align-items: start;
+}
