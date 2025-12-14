@@ -18,16 +18,16 @@ A simple and short (unoptimized) Mandelbrot code. Can be varied by resolution, s
 
 For n=2 (Normal Mandelbrot)
 
-![HTML photo](2%20Mandelbrot/n2.svg)
+![HTML photo](2%20Mandelbrot/n2.svg) 
 
-For n= 0.5 
-![HTML photo](2%20Mandelbrot/n0.5.svg)
+For n= 0.5 <br>
+![HTML photo](2%20Mandelbrot/n0.5.svg) 
 
-For n=1.5
+For n=1.5 <br>
 ![HTML photo](2%20Mandelbrot/n1.5.svg)
 
-For n=3
+For n=3 <br>
 ![HTML photo](2%20Mandelbrot/n3.svg)
 
-For n=8
+For n=8 <br>
 ![HTML photo](2%20Mandelbrot/n8.svg)
