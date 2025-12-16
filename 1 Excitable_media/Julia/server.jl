@@ -54,9 +54,9 @@ end
     # Lanzar el procesamiento en background (no bloquea la respuesta HTTP)
     @async begin
         try
-            println("Iniciando excitable_media con excitable + refracted en background...")
+            # println("Iniciando excitable_media con excitable + refracted en background...")
             run_with_coords(GRID_N, excitable_input; refracted_coords=refracted_input)
-            println("Excitable media (background) lanzado.")
+            # println("Excitable media (background) lanzado.")
         catch err
             @warn "Error en excitable_media" err
         end
