@@ -1,8 +1,8 @@
-using Plots
+# using Plots
 
 # -- Fixes / helper wrapper --
 # Ensure update uses refracted_set (pequeña corrección en la versión original)
-function start(n, matrix; initial_refracted=Tuple{Int,Int}[])
+#= function start(n, matrix; initial_refracted=Tuple{Int,Int}[])
     # Use Sets for excited/refracted to ensure uniqueness and fast membership tests
     function update(excited_set, refracted_set)
         newset = Set{Tuple{Int,Int}}()
@@ -109,4 +109,55 @@ function run_with_coords(n::Int, coords; refracted_coords=Tuple{Int,Int}[])
     catch err
         @warn "Error running excitable_media" err
     end
+end
+=#
+
+
+function calculate_next_step(excited_list, refracted_list, n)
+    excited_set = Set(excited_list)
+    refracted_set = Set(refracted_list)
+    
+    new_excited = Set{Tuple{Int, Int}}()
+    new_refracted = deepcopy(excited_list)
+
+    for (r, c) in excited_list
+        neighbors = ((r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1))
+        for (nr, nc) in neighbors
+            if 1 <= nr <= n && 1 <= nc <= n
+                candidate = (Int(nr), Int(nc))
+                if !(candidate in new_excited) && !(candidate in refracted_list) && !(candidate in new_refracted)
+                    push!(new_excited, candidate)
+                end
+            end
+        end
+    end
+
+    return (collect(new_excited), collect(new_refracted))
+end
+
+function parse_raw_coords(input_list, n)
+    if input_list === nothing
+        return Tuple{Int,Int}[]
+    end    
+
+    out = Tuple{Int,Int}[]
+    for c in input_list
+        if isa(c, AbstractDict)
+            xv = try Float64(get(c, "x", 0.0)) catch _ 0.0 end
+            yv = try Float64(get(c, "y", 0.0)) catch _ 0.0 end
+        elseif isa(c, AbstractVector) || isa(c, Tuple)
+            xv = try Float64(c[1]) catch _ 0.0 end
+            yv = try Float64(c[2]) catch _ 0.0 end
+        else
+            xv = 0.0 
+            yv = 0.0
+        end
+
+        xi = clamp(Int(round(xv + div(n,2))), 1, n) 
+        yi = clamp(Int(round(yv + div(n,2))), 1, n)
+        push!(out, (xi, yi))
+    end
+
+    return unique(out)
+    
 end

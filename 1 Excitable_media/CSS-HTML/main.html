@@ -67,6 +67,13 @@
         const clearBtn = document.getElementById('clear');
         const sendBtn = document.getElementById('start');
 
+        const canvas = document.getElementById('fractalCanvas');
+        const ctx = canvas.getContext('2d');
+        const API_URL = 'http://localhost:8000';
+
+        let animationId = null;
+        let simulation = false;
+
         function render() {
             excitableList.innerHTML = '';
             refractedList.innerHTML = '';
@@ -108,17 +115,55 @@
         });
 
         clearBtn.addEventListener('click', () => {
+            simulation = false;
+            if (animationId) cancelAnimationFrame(animationId);
+
             coordsExcitable.length = 0;
             coordsRefracted.length = 0;
             render();
+
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             inputX.focus();
         });
 
+        async function animar() {
+            if (!simulation) return;
+
+            try {
+                // 1. Pedir siguiente paso
+                const res = await fetch(`${API_URL}/step`);
+                if (!res.ok) throw new Error("Error obteniendo step");
+                
+                const data = await res.json();
+
+                // 2. Dibujar
+                dibujarGrid(data);
+                    setTimeout(() => {
+                    // Solo pedimos el siguiente frame si la simulación sigue activa
+                    if (simulation) {
+                        animationId = requestAnimationFrame(animar);
+                    }
+                }, 2000);
+                
+                // 3. Repetir
+                animationId = requestAnimationFrame(animar);
+
+            } catch (err) {
+                console.error("Error en animación:", err);
+                simulation = false; // Detener en caso de error
+            }
+        }
+        
         sendBtn.addEventListener('click', async () => {
             if (coordsExcitable.length === 0 && coordsRefracted.length === 0) {
                 alert('Ambas listas están vacías.');
                 return;
             }
+            simulation = false;
+            if(animationId) cancelAnimationFrame(animationId);
+
             try {
                 const payload = { excitable: coordsExcitable, refracted: coordsRefracted };
                 const res = await fetch('http://localhost:8000/coords', {
@@ -131,13 +176,62 @@
                     throw new Error(txt || res.statusText);
                 }
                 const data = await res.json();
-                alert(`Respuesta Julia: ${JSON.stringify(data)}`);
                 console.log('Respuesta Julia:', data);
+
+                simulation = true;
+                animar();
             } catch (err) {
                 console.error(err);
                 alert('Error al enviar a Julia: ' + err.message);
             }
         });
+
+        function resizeCanvas() {
+            // Chequeo de seguridad por si el elemento padre aún no cargó
+            if(canvas.parentElement) {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function dibujarGrid(datos){
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const n = datos.n; 
+            const widthCell = canvas.width / n;
+            const heightCell = canvas.height / n;
+
+            // --- PINTAR REFRACTADOS (CYAN) ---
+            ctx.fillStyle = "cyan";
+            datos.refracted.forEach(coord => {
+                // Julia envía [fila, columna] empezando en 1
+                // JS dibuja en (x, y) empezando en 0
+                // Por tanto: x = columna - 1, y = fila - 1
+                const fila = coord[0];
+                const col = coord[1];
+                
+                const x = (col - 1) * widthCell;
+                const y = (fila - 1) * heightCell;
+                
+                ctx.fillRect(x, y, widthCell, heightCell);
+            });
+
+            // --- PINTAR EXCITADOS (ORANGE) ---
+            ctx.fillStyle = "orange";
+            datos.excited.forEach(coord => {
+                const fila = coord[0];
+                const col = coord[1];
+                
+                const x = (col - 1) * widthCell;
+                const y = (fila - 1) * heightCell;
+                
+                ctx.fillRect(x, y, widthCell, heightCell);
+            });
+        }
 
     </script>
 </body>
