@@ -175,7 +175,7 @@ ul#coordsList li span.muted {
     grid-template-columns: 1fr 3fr;
     gap: 20px;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1000vh;
     min-height: calc(100vh - 160px); /* fill viewport while leaving room for header/padding */
     margin: 1vh auto;
     padding: 20px;
