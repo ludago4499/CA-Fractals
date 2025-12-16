@@ -11,13 +11,15 @@
     <div id = "content">
         <form id="formCoords" aria-label="Lista de coordenadas">
             <h2>Coordinates for Cells</h2>
+            Tipo
             <div class="row">
-                <label>
-                    Tipo
-                    <select id="cellType" aria-label="Tipo de celda">
-                        <option value="excitable">Excitable</option>
-                        <option value="refracted">Refracted</option>
-                    </select>
+                <label class ="radiobtn" >  
+                    <input type="radio" id="Excitable" name="cellType" value="excitable" checked>
+                    <label for="Excitable">Excitable</label><br>
+                </label>
+                <label class ="radiobtn">               
+                    <input type="radio" id="Refracted" name="cellType" value="refracted">
+                    <label for="Refracted">Refracted</label><br>
                 </label>
             </div>
             
@@ -38,6 +40,7 @@
                 <button type="submit">Add</button>
                 <button type="button" id="clear">Clear</button>
                 <button type="button" id="start">Start</button>
+                <button type="button" id="Stop">Stop</button>
             </div>
 
             <div class="row" id = "listsContainer">
@@ -61,11 +64,11 @@
         const form = document.getElementById('formCoords');
         const inputX = document.getElementById('x');
         const inputY = document.getElementById('y');
-        const typeSelect = document.getElementById('cellType');
         const excitableList = document.getElementById('coordsExcitableList');
         const refractedList = document.getElementById('coordsRefractedList');
         const clearBtn = document.getElementById('clear');
         const sendBtn = document.getElementById('start');
+        const stopBtn = document.getElementById('Stop');
 
         const canvas = document.getElementById('fractalCanvas');
         const ctx = canvas.getContext('2d');
@@ -100,7 +103,7 @@
                 return;
             }
 
-            const type = typeSelect.value;
+            const type = document.querySelector('input[name="cellType"]:checked').value;
             if (type === 'excitable') {
                 coordsExcitable.push({ x: xv, y: yv });
             } else {
@@ -115,17 +118,20 @@
         });
 
         clearBtn.addEventListener('click', () => {
-            simulation = false;
-            if (animationId) cancelAnimationFrame(animationId);
+            if (simulation == true){
+                alert('La simulación está en curso. Deténgala antes de limpiar las listas.');
+                return;
+            }else{
+                coordsExcitable.length = 0;
+                coordsRefracted.length = 0;
+                render();
 
-            coordsExcitable.length = 0;
-            coordsRefracted.length = 0;
-            render();
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            inputX.focus();
+                inputX.focus();
+            }           
+            
         });
 
         async function animar() {
@@ -134,6 +140,7 @@
             try {
                 // 1. Pedir siguiente paso
                 const res = await fetch(`${API_URL}/step`);
+                if (!simulation) return;
                 if (!res.ok) throw new Error("Error obteniendo step");
                 
                 const data = await res.json();
@@ -232,6 +239,13 @@
                 ctx.fillRect(x, y, widthCell, heightCell);
             });
         }
+        
+        stopBtn.addEventListener('click', () => {
+            simulation = false;
+            console.log(simulation);
+            console.log(animationId);
+            if (animationId) cancelAnimationFrame(animationId);
+        });
 
     </script>
 </body>

@@ -76,6 +76,14 @@ label {
     color: #0b1320;
 }
 
+label.radiobtn {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #0b1320;
+}
+
 input[type="number"] {
     padding: 10px 12px;
     border: 1px solid #e6e9ef;
